@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random groupping</title>
+    <style>
+        body {
+            background-image: url('C:\\Users\\yidan\\OneDrive\\Desktop\\backgroundrandomgroup.jpg'); 
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .group {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        body, h1, label{
+            color: #ffffff; 
+        }
+    </style>
+</head>
+
+<body>
+    <audio controls autoplay loop>
+        <source src="C:\\Users\\yidan\\Downloads\\backgroundmusic.mp3" type="audio/mpeg">
+    </audio>
+    <h1>random groupping tools(*´▽`*)</h1>
+
+    <label for="names">please input the names of the students，seperate them with "," (for example: Alice, Bob, Cindy :</label>
+    <textarea id="names" rows="4" cols="50"></textarea><br>
+
+    <label for="mode">choose mode:</label>
+    <select id="mode" onchange="toggleMode()">
+        <option value="average">number of groups</option>
+        <option value="fixed">number of people</option>
+        <option value="custom">Custom number of people</option>
+    </select><br><br>
+
+    <!-- the-number-of-group-mode -->
+    <div id="averageMode">
+        <label for="numGroups">number-of-groups:</label>
+        <input type="number" id="numGroups"><br><br>
+    </div>
+
+    <!-- the-number-of-people-mode -->
+    <div id="fixedMode" style="display: none;">
+        <label for="groupSize">number-of-people:</label>
+        <input type="number" id="groupSize"><br><br>
+    </div>
+
+    <!-- Custom number of people -->
+    <div id="customMode" style="display: none;">
+        <label for="groupSizes">please input the number of people in each group，seperate with "," (for example: 5,6,7):</label>
+        <input type="text" id="groupSizes"><br><br>
+    </div>
+
+    <!-- Filter grouping options -->
+    <label for="mustTogether">Those people have to be in the same group(seperate each pairs using ","，ex: Alice,Bob;Eve,Frank):</label>
+    <textarea id="mustTogether" rows="4" cols="50"></textarea><br>
+    <label for="cannotTogether">Those people cannot be in the same group(seperate each pairs using ","，ex: Charlie,Dave;George,Harry):</label>
+    <textarea id="cannotTogether" rows="4" cols="50"></textarea><br><br>
+
+    <button onclick="generateGroups()">start groupping!⧸⎩⎠⎞ ͏(・∀・) ⎛͏⎝⎭⧹!!</button><br><br>
+
+    <div id="unassigned" style="color: red;"></div>
+    <div id="result"></div>
+
+<video id="introVideo" controls autoplay style="width:426px; height:240px;">
+    <source src="C:\\Users\\yidan\\Downloads\\guiding video.mp4" type="video/mp4">
+</video>
+    <script>
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function toggleMode() {
+            const mode = document.getElementById("mode").value;
+            document.getElementById("averageMode").style.display = (mode === "average") ? "block" : "none";
+            document.getElementById("fixedMode").style.display = (mode === "fixed") ? "block" : "none";
+            document.getElementById("customMode").style.display = (mode === "custom") ? "block" : "none";
+        }
+
+        function groupSatisfiesRules(group, mustTogetherPairs, cannotTogetherPairs) {
+            for (let pair of mustTogetherPairs) {
+                if ((group.includes(pair[0]) && !group.includes(pair[1])) || (group.includes(pair[1]) && !group.includes(pair[0]))) {
+                    return false;
+                }
+            }
+            for (let pair of cannotTogetherPairs) {
+                if (group.includes(pair[0]) && group.includes(pair[1])) {
+                    return false
+                }
+            }
+            return true;
+        }
+
+        function generateGroups() {
+            let originalNames = document.getElementById("names").value.split(",").map(name => name.trim());
+            let names = [...originalNames];
+            shuffle(names);
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "";
+            document.getElementById("unassigned").innerHTML = "";
+
+            const mustTogetherPairs = document.getElementById("mustTogether").value.split(";").map(pair => pair.split(",").map(name => name.trim()));
+            const cannotTogetherPairs = document.getElementById("cannotTogether").value.split(";").map(pair => pair.split(",").map(name => name.trim()));
+
+            const mode = document.getElementById("mode").value;
+
+            let groups = [];
+            if (mode === "average") {
+                const numGroups = parseInt(document.getElementById("numGroups").value);
+                const groupSize = Math.ceil(names.length / numGroups); // Calculate group size
+                for (let i = 0; i < numGroups; i++) {
+                    let group = names.splice(0, groupSize);
+                    while (!groupSatisfiesRules(group, mustTogetherPairs, cannotTogetherPairs) && names.length > 0) {
+                        names.push(...group);
+                        shuffle(names);
+                        group = names.splice(0, groupSize);
+                    }
+                    groups.push(group);
+                }
+            } else if (mode === "fixed") {
+                const groupSize = parseInt(document.getElementById("groupSize").value);
+                while (names.length > 0) {
+                    let group = names.splice(0, groupSize);
+                    while (!groupSatisfiesRules(group, mustTogetherPairs, cannotTogetherPairs) && names.length > 0) {
+                        names.push(...group);
+                        shuffle(names);
+                        group = names.splice(0, groupSize);
+                    }
+                    groups.push(group);
+                }
+            } else {
+                const groupSizes = document.getElementById("groupSizes").value.split(",").map(size => parseInt(size));
+                for (let size of groupSizes) {
+                    let group = names.splice(0, size);
+                    while (!groupSatisfiesRules(group, mustTogetherPairs, cannotTogetherPairs) && names.length > 0) {
+                        names.push(...group);
+                        shuffle(names);
+                        group = names.splice(0, size);
+                    }
+                    groups.push(group);
+                }
+            }
+
+            // Display generated groups
+            for (let group of groups) {
+                const groupDiv = document.createElement("div");
+                groupDiv.className = "group";
+                groupDiv.innerHTML = group.join(", ");
+                resultDiv.appendChild(groupDiv);
+            }
+
+            // If there are unassigned members, display them
+            if (names.length > 0) {
+                document.getElementById("unassigned").innerHTML = "people left: " + names.join(", ");
+            }
+        }
+    </script>
+</body>
+
+</html>
+
