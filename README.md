@@ -1,5 +1,11 @@
 # Random-grouping
 random grouping mode
+
+
+!!!!!!!!!!! https://youtu.be/JQw4wbvtxcc 
+This is the link to download the guide video, which is part of the tool ( but it is not neccessary) 
+
+
 The tool is built using HTML for the user interface and JavaScript for the functionality. Here's a breakdown of the key components:
 
 - HTML: Defines the structure of the web page, including input fields, buttons, and placeholders for displaying groups and unassigned members.
